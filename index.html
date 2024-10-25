@@ -1,0 +1,102 @@
+<html>
+    <head>
+        <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script>
+            var files=[]
+            var end = 0;
+            const APIDOMAIN = "10.7.13.40:10000"
+            function getFiles() {
+                return $.get(`http://${APIDOMAIN}/files`, function(data,status){
+                    files=data
+                    $("#file").empty()
+                    for (let i of files) {
+                        $("#file").append(`<option value='${i}'>${i}</option>`)
+                    }
+                    getContents()
+                })
+            }
+            function getContents() {
+                return $.get(`http://${APIDOMAIN}/contents?file=${$("#file").val()}&pagesize=${$("#limit").val()}`, function(data,status){
+                    $(".content").empty()
+                    for (let i of data) {
+                        $(".content").append(`<div class="file-line"><div class="file-line-no">${i.no}</div><div class="file-line-content">${i.content}</div></div>`)
+                    }
+                })
+            }
+            getFiles();
+            $(document).ready(function () {
+                $("#maxNumber").attr("value",Number.MAX_SAFE_INTEGER)
+                $("#file").change(getContents)
+                $("#limit").change(getContents)
+                $("#refresh").prop("checked",false)
+                //$(".content").scrollTop($(".content").prop('scrollHeight')-$(".content").prop('offsetHeight'))
+                $("#refresh").change(function(){
+                    if ($("#refresh").is(":checked")) {
+                        $(".content").scrollTop($(".content").prop('scrollHeight')-$(".content").prop('offsetHeight'))
+                    }
+                })
+                $(".content").scroll(function(){
+                    var scrollTop = $(".content").scrollTop();
+                    if (scrollTop ==0) {
+                    }
+                })
+                setInterval(function(){
+                    if (($(".content").scrollTop() + $(".content").prop('offsetHeight') >= $(".content").prop('scrollHeight')) && $("#refresh").is(":checked")) {
+                        getContents()
+                    }
+                },1000)
+            })
+        </script>
+        <style>
+            .file-line-no{
+                flex-direction: column;
+                float:left;
+                text-align: left;
+                width:80px;
+            }
+            .file-line-content{
+                margin-left:100px;
+            }
+            .search-form{
+                width:100%;
+            }
+            .content {
+                overflow-y:auto;
+                height:calc(100vh - 60px);
+            }
+            .file-line {
+                width:100%;
+                min-height: 25px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="search-form">
+            <form id="form">
+                <label for="file">Choose a file:</label>
+                <select name="file" id="file">
+                  <option value="null">null
+                  </option>
+                </select>
+                <label for="limit">Line per page:</label>
+                <select name="limit" id="limit">
+                  <option value="100">100</option>
+                  <option value="200">200</option>
+                  <option value="300">300</option>
+                  <option value="100000" id="maxNumber">&#x221e;</option>
+                </select>
+                <label for="refresh">Auto refresh:</label>
+                <input type="checkbox" id="refresh" />
+            </form>
+        </div>
+        
+          <div class="content">
+            <div class="file-line">
+                <div class="file-line-no">line no</div>
+                <div class="file-line-content">line content</div>
+            </div>
+          </div>
+    </body>
+</html>
